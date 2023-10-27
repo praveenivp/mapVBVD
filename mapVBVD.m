@@ -395,6 +395,7 @@ for s=1:NScans
     twix_obj{s}.refscanPSRef0 = twix_map_obj(arg,'refscan_phasestab_ref0',filename,version,rstraj);
     twix_obj{s}.refscanPSRef1 = twix_map_obj(arg,'refscan_phasestab_ref1',filename,version,rstraj);
     twix_obj{s}.RTfeedback    = twix_map_obj(arg,'rtfeedback',filename,version,rstraj);
+    twix_obj{s}.syncscan    = twix_map_obj(arg,'syncscan',filename,version,rstraj);
     twix_obj{s}.vop           = twix_map_obj(arg,'vop',filename,version); % tx-array rf pulses
     
     % print reader version information
@@ -443,6 +444,14 @@ for s=1:NScans
             tmpMdh.(f{1}) = mdh.(f{1})( isCurrScan, : );
         end
         twix_obj{s}.noise.readMDH( tmpMdh, filePos(isCurrScan) );
+    end
+    if true
+        clear tmpMdh
+        isCurrScan = logical( mask.MDH_SYNCDATA );
+        for f = fieldnames( mdh ).'
+            tmpMdh.(f{1}) = mdh.(f{1})( isCurrScan, : );
+        end
+        twix_obj{s}.syncscan.readMDH( tmpMdh, filePos(isCurrScan) );
     end
     if arg.bReadRefScan
         clear tmpMdh
@@ -541,7 +550,7 @@ for s=1:NScans
     for scan = { 'image', 'noise', 'phasecor', 'phasestab', ...
                  'phasestabRef0', 'phasestabRef1', 'refscan', ...
                  'refscanPC', 'refscanPS', 'refscanPSRef0', ...
-                 'refscanPSRef1', 'RTfeedback', 'vop' }
+                 'refscanPSRef1', 'RTfeedback', 'vop','syncscan' }
         f = scan{1};
 
         % remove unused fields
@@ -811,7 +820,7 @@ evalInfoMask1 = mdh.aulEvalInfoMask(:,1);
 mask.MDH_ACQEND            = min(bitand(evalInfoMask1, 2^0), 1);
 mask.MDH_RTFEEDBACK        = min(bitand(evalInfoMask1, 2^1), 1);
 mask.MDH_HPFEEDBACK        = min(bitand(evalInfoMask1, 2^2), 1);
-mask.MDH_SYNCDATA          = min(bitand(evalInfoMask1, 2^5), 1);
+mask.MDH_SYNCDATA          = (evalInfoMask1==0);% min(bitand(evalInfoMask1, 2^5), 1);
 mask.MDH_RAWDATACORRECTION = min(bitand(evalInfoMask1, 2^10),1);
 mask.MDH_REFPHASESTABSCAN  = min(bitand(evalInfoMask1, 2^14),1);
 mask.MDH_PHASESTABSCAN     = min(bitand(evalInfoMask1, 2^15),1);
